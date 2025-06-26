@@ -28,6 +28,14 @@
   color: #61dafb;
 }
 
+.leaflet-marker-icon.invisible-icon {
+  background: none;
+  border: none;
+  width: 0;
+  height: 0;
+}
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
