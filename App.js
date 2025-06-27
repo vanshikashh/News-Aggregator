@@ -1,3 +1,4 @@
+import "../src/App.css";
 import React, { useState } from "react";
 import {
   MapContainer,
@@ -109,12 +110,14 @@ function App() {
   };
 
   return (
+    
     <div style={{ display: "flex" }}>
-      <MapContainer
-        center={[23.5, 80]}
-        zoom={5}
-        style={{ height: "100vh", width: "70%" }}
-      >
+    <MapContainer
+    center={[23.5, 80]}
+    zoom={5}
+    style={{ height: "100vh", width: "70%", cursor: "crosshair" }}
+  >
+
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         <ClickHandler onCitySelected={fetchNews} />
@@ -167,14 +170,17 @@ function App() {
       </MapContainer>
 
       {/* News Sidebar */}
-      <div
-        style={{
-          padding: "1rem",
-          width: "30%",
-          overflowY: "scroll",
-          height: "100vh",
-        }}
-      >
+    <div
+    style={{
+      padding: "1rem",
+      width: "30%",
+      overflowY: "auto",
+      height: "100vh",
+      borderLeft: "1px solid #ddd",
+      backgroundColor: "#f9f9f9",
+    }}
+    >
+
         <h2>Top News {selectedCity && `for ${selectedCity}`}</h2>
         {news.length === 0 && <p>Click on a region to load news.</p>}
         {news.map((article, index) => (
@@ -199,6 +205,7 @@ function App() {
       e.currentTarget.style.transform = "scale(1)";
       e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.06)";
     }}
+    
   >
     {/* Thumbnail section (shown only if image exists) */}
     {article.urlToImage && (
@@ -240,12 +247,11 @@ function App() {
       </a>
     </div>
   </div>
+  
 ))}
-
-
       </div>
     </div>
   );
+  
 }
-
 export default App;
