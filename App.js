@@ -8,9 +8,9 @@ import {
 } from "react-leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
+import "./App.css";
 import L from "leaflet";
 
-// Fix broken icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -18,30 +18,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-// 🕒 Helper function
 function timeAgo(dateStr) {
   const now = new Date();
   const published = new Date(dateStr);
   const diffMs = now - published;
-
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes} min ago`;
-
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hr ago`;
-
   const days = Math.floor(hours / 24);
   return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-// Map click handler
 function ClickHandler({ onCitySelected }) {
   useMapEvents({
     click: async (e) => {
       const { lat, lng } = e.latlng;
       const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
-
       try {
         const response = await axios.get(nominatimUrl);
         const city =
@@ -50,29 +44,24 @@ function ClickHandler({ onCitySelected }) {
           response.data.address.village ||
           response.data.address.state ||
           "Unknown";
-
         onCitySelected(city, [lat, lng]);
       } catch (err) {
         console.error("Reverse geocoding failed", err);
       }
     },
   });
-
   return null;
 }
 
-// Hover handler
 function HoverHandler({ setHoverCity, setHoverPosition }) {
   useMapEvents({
     mousemove: async (e) => {
       const { lat, lng } = e.latlng;
-
       if (
         !window._lastHoverFetch ||
         Date.now() - window._lastHoverFetch > 700
       ) {
         window._lastHoverFetch = Date.now();
-
         try {
           const res = await axios.get(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
@@ -84,7 +73,6 @@ function HoverHandler({ setHoverCity, setHoverPosition }) {
             res.data.address.hamlet ||
             res.data.address.state ||
             "Unknown";
-
           setHoverCity(city);
           setHoverPosition([lat, lng]);
         } catch (err) {
@@ -98,7 +86,6 @@ function HoverHandler({ setHoverCity, setHoverPosition }) {
       setHoverPosition(null);
     },
   });
-
   return null;
 }
 
@@ -109,14 +96,12 @@ function App() {
   const [hoverCity, setHoverCity] = useState("");
   const [hoverPosition, setHoverPosition] = useState(null);
   const [searchCity, setSearchCity] = useState("");
-
   const [showIndiaNews, setShowIndiaNews] = useState(false);
   const [indiaNews, setIndiaNews] = useState([]);
 
   const fetchNews = async (city, position) => {
     setSelectedCity(city);
     setClickedPosition(position);
-
     try {
       const res = await axios.get(`http://127.0.0.1:5000/news/${city}`);
       setNews(res.data.articles);
@@ -128,12 +113,10 @@ function App() {
 
   const handleSearch = async () => {
     if (!searchCity.trim()) return;
-
     try {
       const res = await axios.get(
         `https://nominatim.openstreetmap.org/search?city=${searchCity}&format=json&limit=1`
       );
-
       if (res.data.length > 0) {
         const { lat, lon } = res.data[0];
         fetchNews(searchCity, [parseFloat(lat), parseFloat(lon)]);
@@ -160,21 +143,7 @@ function App() {
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      <button
-        onClick={toggleIndiaNews}
-        style={{
-          position: "absolute",
-          top: "1rem",
-          left: "1rem",
-          zIndex: 1000,
-          padding: "0.5rem 1rem",
-          backgroundColor: "#2a64f6",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
+      <button onClick={toggleIndiaNews} className="show-news-btn">
         {showIndiaNews ? "Show Map View" : "Show Top India News"}
       </button>
 
@@ -222,17 +191,8 @@ function App() {
             )}
           </MapContainer>
 
-          {/* Sidebar */}
-          <div
-            style={{
-              padding: "1rem",
-              width: "30%",
-              overflowY: "auto",
-              borderLeft: "1px solid #ddd",
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            <div style={{ marginBottom: "1rem" }}>
+          <div className="sidebar">
+            <div>
               <input
                 type="text"
                 placeholder="Search city..."
@@ -241,26 +201,8 @@ function App() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSearch();
                 }}
-                style={{
-                  width: "75%",
-                  padding: "0.5rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  fontSize: "0.9rem",
-                }}
               />
-              <button
-                onClick={handleSearch}
-                style={{
-                  marginLeft: "0.5rem",
-                  padding: "0.5rem 0.8rem",
-                  backgroundColor: "#2a64f6",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={handleSearch} className="search-btn">
                 Search
               </button>
             </div>
@@ -268,49 +210,14 @@ function App() {
             <h2>Top News {selectedCity && `for ${selectedCity}`}</h2>
             {news.length === 0 && <p>Click on a region to load news.</p>}
             {news.map((article, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  marginBottom: "1.5rem",
-                  padding: "1rem",
-                  borderRadius: "12px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                  cursor: "pointer",
-                }}
-              >
+              <div className="news-card" key={index}>
                 {article.urlToImage && (
-                  <img
-                    src={article.urlToImage}
-                    alt="Thumbnail"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      objectFit: "cover",
-                      borderRadius: "8px",
-                      flexShrink: 0,
-                    }}
-                  />
+                  <img src={article.urlToImage} alt="Thumbnail" />
                 )}
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ marginBottom: "0.5rem", color: "#222", fontSize: "1.05rem" }}>
-                    {article.title}
-                  </h4>
-                  <p style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", color: "#777" }}>
-                    {timeAgo(article.publishedAt)}
-                  </p>
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      color: "#2a64f6",
-                      textDecoration: "none",
-                      fontWeight: "500",
-                    }}
-                  >
+                <div className="news-content">
+                  <h4>{article.title}</h4>
+                  <p>{timeAgo(article.publishedAt)}</p>
+                  <a href={article.url} target="_blank" rel="noreferrer">
                     Read more →
                   </a>
                 </div>
@@ -319,57 +226,26 @@ function App() {
           </div>
         </div>
       ) : (
-        <div style={{ padding: "2rem", overflowY: "auto", height: "100%", backgroundColor: "#f9f9f9" }}>
-          <h2>Top News in India</h2>
-          {indiaNews.map((article, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                gap: "1rem",
-                marginBottom: "1.5rem",
-                padding: "1rem",
-                borderRadius: "12px",
-                backgroundColor: "#ffffff",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-              }}
-            >
-              {article.urlToImage && (
-                <img
-                  src={article.urlToImage}
-                  alt="Thumbnail"
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-              <div style={{ flex: 1 }}>
-                <h4 style={{ marginBottom: "0.5rem", color: "#222", fontSize: "1.05rem" }}>
-                  {article.title}
-                </h4>
-                <p style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", color: "#777" }}>
-                  {timeAgo(article.publishedAt)}
-                </p>
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    color: "#2a64f6",
-                    textDecoration: "none",
-                    fontWeight: "500",
-                  }}
-                >
-                  Read more →
-                </a>
-              </div>
-            </div>
-          ))}
+        <div className="india-view">
+  <h2>Top News in India</h2>
+  <div className="news-grid">
+    {indiaNews.map((article, index) => (
+      <div className="news-card" key={index}>
+        {article.urlToImage && (
+          <img src={article.urlToImage} alt="Thumbnail" />
+        )}
+        <div className="news-content">
+          <h4>{article.title}</h4>
+          <p>{timeAgo(article.publishedAt)}</p>
+          <a href={article.url} target="_blank" rel="noreferrer">
+            Read more →
+          </a>
         </div>
+      </div>
+    ))}
+  </div>
+</div>
+
       )}
     </div>
   );
